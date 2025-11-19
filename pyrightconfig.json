@@ -1,0 +1,8 @@
+{
+  "include": ["src", "tests", "*.py"],
+  "exclude": ["**/__pycache__", "**/node_modules", ".venv", "venv", "build", "dist"],
+  "reportMissingImports": false,
+  "reportMissingTypeStubs": false,
+  "pythonVersion": "3.10"
+}
+
