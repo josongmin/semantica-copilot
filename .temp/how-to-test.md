@@ -149,10 +149,10 @@ async def test():
         query="HybridRetriever는 무엇인가?",
         repo_ids=["semantica-codegraph"]
     )
-    
+
     graph = get_graph()
     result = await graph.ainvoke(state)
-    
+
     print("=" * 80)
     print("답변:")
     print("=" * 80)
@@ -236,10 +236,10 @@ Lexical, Semantic, Graph, Fuzzy 검색을 병렬 실행하여
    - Graph: 관계 기반 확장
    - Fuzzy: 심볼명 매칭
 
-2. **Fusion 전략**: 
+2. **Fusion 전략**:
    - WeightedFusion, RRF, CombSum 조합
    - 각 검색 결과의 점수를 통합
-   
+
 ...
 ```
 
@@ -282,4 +282,3 @@ curl http://localhost:8000/api/repos/ | jq 'map(select(.total_nodes > 0))'
 cd /Users/songmin/Documents/code-jo/semantica/semantica-copilot
 python tests/integration_test.py
 ```
-

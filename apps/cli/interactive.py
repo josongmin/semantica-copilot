@@ -9,8 +9,8 @@ codegraph_root = project_root.parent / "semantica-codegraph"
 if str(codegraph_root) not in sys.path:
     sys.path.insert(0, str(codegraph_root))
 
-from apps.cli.app2 import SemanticaApp
-from src.core.bootstrap import create_bootstrap
+from apps.cli.app2 import SemanticaApp  # noqa: E402
+from src.core.bootstrap import create_bootstrap  # noqa: E402
 
 
 def run_interactive() -> None:

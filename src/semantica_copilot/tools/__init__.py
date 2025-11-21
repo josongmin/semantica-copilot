@@ -1,5 +1,5 @@
 """Tools 모듈"""
 
-from .codegraph import BackendType, CodeGraphClient
+from .codegraph import BackendType, CodeGraphAPI, CodeGraphClient
 
-__all__ = ["CodeGraphClient", "BackendType"]
+__all__ = ["CodeGraphClient", "CodeGraphAPI", "BackendType"]

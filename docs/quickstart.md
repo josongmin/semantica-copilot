@@ -111,4 +111,3 @@ curl http://localhost:8000/health
 # 레포가 인덱싱되어 있는지 확인
 curl http://localhost:8000/repositories
 ```
-

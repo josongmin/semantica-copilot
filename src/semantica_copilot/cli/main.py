@@ -3,7 +3,6 @@
 import asyncio
 import logging
 import sys
-from typing import List
 
 from semantica_copilot.agent.state import CodeSearchIntent, SearchStrategy
 from semantica_copilot.tools.codegraph import BackendType, CodeGraphClient
@@ -18,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 async def simple_agent(
     query: str,
-    repo_ids: List[str],
+    repo_ids: list[str],
     base_url: str = "http://localhost:8000",
 ) -> str:
     """

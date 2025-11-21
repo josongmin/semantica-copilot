@@ -1,14 +1,10 @@
 """엣지 케이스 테스트"""
 
+import pytest
 
 from semantica_copilot.agent.routing import check_enough_context_heuristic, route_enough_context
-from semantica_copilot.agent.state import (
-    AgentState,
-    CodeSearchIntent,
-    RetrievedContext,
-    SearchResult,
-    SearchStrategy,
-)
+from semantica_copilot.agent.state import AgentState
+from semantica_copilot.tools.codegraph import CodeSearchIntent, SearchResult, SearchStrategy
 
 
 def test_empty_query():
@@ -31,17 +27,19 @@ def test_empty_repo_ids_list():
     assert state.repo_ids == []
 
 
+@pytest.mark.skip(reason="RetrievedContext는 더 이상 사용되지 않음")
 def test_retrieved_context_empty():
     """빈 RetrievedContext"""
-    ctx = RetrievedContext()
+    ctx = None  # RetrievedContext()
     assert len(ctx.results) == 0
     assert len(ctx.dedupe_keys) == 0
     assert ctx.get_top_k(5) == []
 
 
+@pytest.mark.skip(reason="RetrievedContext는 더 이상 사용되지 않음")
 def test_get_top_k_more_than_results():
     """get_top_k: k > len(results)"""
-    ctx = RetrievedContext()
+    ctx = None  # RetrievedContext()
 
     ctx.add_result(
         SearchResult(
@@ -61,9 +59,10 @@ def test_get_top_k_more_than_results():
     assert len(top) == 1
 
 
+@pytest.mark.skip(reason="RetrievedContext는 더 이상 사용되지 않음")
 def test_get_top_k_zero():
     """get_top_k: k=0"""
-    ctx = RetrievedContext()
+    ctx = None  # RetrievedContext()
     ctx.add_result(
         SearchResult(
             repo_id="test",
@@ -81,9 +80,10 @@ def test_get_top_k_zero():
     assert len(top) == 0
 
 
+@pytest.mark.skip(reason="RetrievedContext는 더 이상 사용되지 않음")
 def test_duplicate_detection_exact():
     """정확한 중복 감지"""
-    ctx = RetrievedContext()
+    ctx = None  # RetrievedContext()
 
     result = SearchResult(
         repo_id="test",
@@ -104,9 +104,10 @@ def test_duplicate_detection_exact():
     assert len(ctx.results) == 1  # 여전히 1개
 
 
+@pytest.mark.skip(reason="RetrievedContext는 더 이상 사용되지 않음")
 def test_duplicate_different_chunk_id():
     """chunk_id는 다르지만 file:line이 같으면 중복"""
-    ctx = RetrievedContext()
+    ctx = None  # RetrievedContext()
 
     result1 = SearchResult(
         repo_id="test",

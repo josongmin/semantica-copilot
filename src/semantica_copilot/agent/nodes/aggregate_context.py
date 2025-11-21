@@ -19,7 +19,7 @@ def aggregate_context_node(state: AgentState) -> AgentState:
     logger.info("aggregate_context_node: Aggregating...")
 
     total_results = len(state.accumulated_context.results)
-    unique_files = len(set(r.file_path for r in state.accumulated_context.results))
+    unique_files = len({r.file_path for r in state.accumulated_context.results})
 
     logger.info(f"Total results: {total_results}, Unique files: {unique_files}")
 

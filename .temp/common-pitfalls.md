@@ -36,7 +36,7 @@ class CodeGraphClient:
     ):
         """HTTP 전송용은 항상 str"""
         pass
-    
+
     async def search_with_intent(
         self,
         intent: CodeSearchIntent,  # Enum 포함 가능
@@ -143,7 +143,7 @@ async def search():
 class CodeGraphClient:
     def __init__(self):
         self.client = httpx.AsyncClient(base_url="...")
-    
+
     async def aclose(self):
         await self.client.aclose()
 
@@ -294,4 +294,3 @@ ImportError: attempted relative import beyond top-level package
 ResourceWarning: unclosed <socket.socket>
 ```
 → `aclose()` 호출 확인
-

@@ -1,13 +1,9 @@
 """State 모델 테스트"""
 
+import pytest
 
-from semantica_copilot.agent.state import (
-    AgentState,
-    CodeSearchIntent,
-    RetrievedContext,
-    SearchResult,
-    SearchStrategy,
-)
+from semantica_copilot.agent.state import AgentState
+from semantica_copilot.tools.codegraph import CodeSearchIntent, SearchResult, SearchStrategy
 
 
 def test_search_strategy_enum():
@@ -26,9 +22,10 @@ def test_code_search_intent_default():
     assert intent.graph_depth == 1
 
 
+@pytest.mark.skip(reason="RetrievedContext는 더 이상 사용되지 않음")
 def test_retrieved_context_add_result():
     """RetrievedContext.add_result 테스트"""
-    ctx = RetrievedContext()
+    ctx = None  # RetrievedContext()
 
     result1 = SearchResult(
         repo_id="repo1",
@@ -51,9 +48,10 @@ def test_retrieved_context_add_result():
     assert len(ctx.results) == 1  # 변화 없음
 
 
+@pytest.mark.skip(reason="RetrievedContext는 더 이상 사용되지 않음")
 def test_retrieved_context_get_top_k():
     """RetrievedContext.get_top_k 테스트"""
-    ctx = RetrievedContext()
+    ctx = None  # RetrievedContext()
 
     for i in range(5):
         ctx.add_result(
@@ -81,9 +79,8 @@ def test_agent_state_default():
 
     assert state.query == "test"
     assert state.repo_ids is None
-    assert state.search_steps == 0
-    assert state.max_search_steps == 3
+    assert state.execution_plan is None
+    assert len(state.execution_results) == 0
+    assert len(state.accumulated_chunks) == 0
     assert state.answer is None
     assert state.error is None
-    # enough_context 필드 제거됨
-    assert not hasattr(state, "enough_context")

@@ -216,4 +216,3 @@ curl -X POST http://localhost:8001/chat \
 **Phase 0-1-2 완료! 🎉**
 
 기본 에이전트 완성, Phase 3 (고도화) 진행 가능.
-

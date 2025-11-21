@@ -115,4 +115,3 @@ python -m apps.api.main
 cd /Users/songmin/Documents/code-jo/semantica/semantica-copilot
 python tests/integration_test.py
 ```
-

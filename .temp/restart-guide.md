@@ -72,4 +72,3 @@ python tests/integration_test.py
   text: 150 chars ✅
 ✅ 그래프 실행 완료
 ```
-

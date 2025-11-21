@@ -3,6 +3,9 @@
 import asyncio
 import logging
 import subprocess
+
+# codegraph 프로젝트를 sys.path에 추가
+import sys
 import traceback
 from pathlib import Path
 
@@ -11,14 +14,12 @@ from textual.containers import Container, Horizontal, ScrollableContainer
 from textual.reactive import reactive
 from textual.widgets import Static, TextArea
 
-# codegraph 프로젝트를 sys.path에 추가
-import sys
 project_root = Path(__file__).parent.parent.parent
 codegraph_root = project_root.parent / "semantica-codegraph"
 if str(codegraph_root) not in sys.path:
     sys.path.insert(0, str(codegraph_root))
 
-from src.core.bootstrap import Bootstrap
+from src.core.bootstrap import Bootstrap  # noqa: E402
 
 # 로깅 설정
 # 프로젝트 루트 찾기 (apps/cli/app.py -> 프로젝트 루트)
@@ -300,7 +301,9 @@ class SemanticaApp(App):
 
         # Bottom: 입력 영역 (하단 고정)
         with Container(id="bottom"):
-            yield TextArea(id="input-box", placeholder="명령어를 입력하세요 (예: /help, /index, /search)")
+            yield TextArea(
+                id="input-box", placeholder="명령어를 입력하세요 (예: /help, /index, /search)"
+            )
             yield Static(self.get_current_path(), id="path-info")
 
         # Overlay: 커맨드 팔레트 (/ 입력 시만 표시)
@@ -406,12 +409,15 @@ class SemanticaApp(App):
             )
         elif text == "repos":
             chat_view.mount(
-                Static("[#a0a0a0]저장소 목록 기능 준비 중...[/#a0a0a0]", classes="assistant-thinking")
+                Static(
+                    "[#a0a0a0]저장소 목록 기능 준비 중...[/#a0a0a0]", classes="assistant-thinking"
+                )
             )
         else:
             chat_view.mount(
                 Static(
-                    f"[#a0a0a0]알 수 없는 명령어: {text}[/#a0a0a0]\n" "help를 입력하여 사용 가능한 명령어를 확인하세요.",
+                    f"[#a0a0a0]알 수 없는 명령어: {text}[/#a0a0a0]\n"
+                    "help를 입력하여 사용 가능한 명령어를 확인하세요.",
                     classes="assistant-msg",
                 )
             )

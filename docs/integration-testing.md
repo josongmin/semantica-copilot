@@ -194,4 +194,3 @@ python -m apps.cli.main index /path/to/repo --repo-id test-repo
 1. text 필드 추가 (codegraph 수정 or copilot 확장)
 2. 실제 쿼리로 품질 확인
 3. Phase 3 진행
-

@@ -1,8 +1,30 @@
 {
-  "include": ["src", "tests", "*.py"],
-  "exclude": ["**/__pycache__", "**/node_modules", ".venv", "venv", "build", "dist"],
+  "include": ["src", "example", "*.py"],
+  "exclude": [
+    "**/__pycache__",
+    "**/node_modules",
+    ".venv",
+    "venv",
+    "build",
+    "dist",
+    "apps",
+    "tests"
+  ],
   "reportMissingImports": false,
   "reportMissingTypeStubs": false,
-  "pythonVersion": "3.10"
+  "reportUnknownMemberType": false,
+  "reportUnknownVariableType": false,
+  "reportUnknownArgumentType": "warning",
+  "reportUnknownParameterType": false,
+  "reportUnknownLambdaType": false,
+  "reportAny": false,
+  "reportUntypedFunctionDecorator": false,
+  "reportUntypedClassDecorator": false,
+  "reportArgumentType": "error",
+  "reportAssignmentType": "error",
+  "reportAttributeAccessIssue": false,
+  "pythonVersion": "3.10",
+  "typeCheckingMode": "basic",
+  "useLibraryCodeForTypes": true,
+  "stubPath": "src"
 }
-

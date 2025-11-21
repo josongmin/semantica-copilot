@@ -1,0 +1,27 @@
+# Ruff 설정 (Cursor/VSCode에서도 사용)
+# Cursor에서 Ruff extension 설치 필요: charliermarsh.ruff
+
+line-length = 100
+target-version = "py310"
+
+[lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "I",   # isort (import sorting)
+    "N",   # pep8-naming
+    "W",   # pycodestyle warnings
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+]
+ignore = [
+    "E501",  # line too long (handled by formatter)
+]
+
+[lint.isort]
+known-first-party = ["semantica_copilot"]
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+
+[format]
+quote-style = "double"
+indent-style = "space"

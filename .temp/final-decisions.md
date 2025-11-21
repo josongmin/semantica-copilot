@@ -8,12 +8,12 @@
 class RetrievedContext(BaseModel):
     results: List[SearchResult] = Field(default_factory=list)
     dedupe_keys: List[str] = Field(default_factory=list)
-    
+
     @property
     def _dedupe_set(self) -> set:
         """중복 체크용 (매번 생성)"""
         return set(self.dedupe_keys)
-    
+
     def add_result(self, result: SearchResult) -> bool:
         key = f"{result.repo_id}:{result.file_path}:{result.line_start}"
         if key in self._dedupe_set:
@@ -54,7 +54,7 @@ def route_enough_context(state: AgentState) -> str:
   - 일관성: 판단 로직 한 곳
   - 단순함: 불필요한 상태 제거
   - 명확함: routing 함수가 단일 진실 공급원
-  
+
 - B안 (비추): 노드에서 state.enough_context 세팅, routing이 신뢰
   - 상태와 판단 로직 분산
   - 불일치 가능성
@@ -118,14 +118,14 @@ class CodeGraphClient:
     ) -> List[SearchResult]:
         """Intent → 검색 파라미터 변환"""
         query = " ".join(intent.keywords or intent.entities)
-        
+
         # Strategy → weights 매핑 (Enum 사용)
         weights = None
         if intent.strategy == SearchStrategy.GRAPH:
             weights = {"lexical": 0.1, "semantic": 0.2, "graph": 0.6, "fuzzy": 0.1}
         elif intent.strategy == SearchStrategy.SEMANTIC:
             weights = {"lexical": 0.1, "semantic": 0.8, "graph": 0.1, "fuzzy": 0.0}
-        
+
         return await self.search_code(
             query=query,
             repo_ids=repo_ids,
@@ -141,10 +141,10 @@ class CodeGraphClient:
 async def run_search_node(state: AgentState) -> AgentState:
     intent = state.search_intents[-1]
     results = await client.search_with_intent(intent, state.repo_ids)
-    
+
     for r in results:
         state.accumulated_context.add_result(r)
-    
+
     state.search_steps += 1
     return state
 ```
@@ -164,7 +164,7 @@ class CodeGraphClient:
         if backend == BackendType.HTTP:
             import httpx
             self.client = httpx.AsyncClient(base_url=base_url)
-    
+
     async def aclose(self):
         """종료 시 호출"""
         if hasattr(self, 'client') and isinstance(self.client, httpx.AsyncClient):
@@ -221,15 +221,15 @@ async def simple_agent(query: str, repo_ids: List[str]) -> str:
         strategy=SearchStrategy.HYBRID,
         limit=10
     )
-    
+
     # 2. 검색
     client = CodeGraphClient(backend=BackendType.HTTP)
     results = await client.search_with_intent(intent, repo_ids)
-    
+
     # 3. 단순 답변
     context = "\n".join([r.text for r in results[:5]])
     answer = f"검색 결과:\n{context}"
-    
+
     return answer
 
 # CLI 테스트
@@ -403,10 +403,10 @@ if state.error:
 async def simple_agent(query: str, repo_ids: List[str]) -> str:
     # 1. Intent 생성
     intent = CodeSearchIntent(entities=[query], limit=10)
-    
+
     # 2. 검색
     results = await client.search_with_intent(intent, repo_ids)
-    
+
     # 3. 답변
     return f"결과 {len(results)}개:\n{results[0].text}"
 
@@ -467,4 +467,3 @@ graph.add_conditional_edges("aggregate", route_enough_context)
 4. 백엔드 독립성
 
 **바로 시작 가능**: ✅
-

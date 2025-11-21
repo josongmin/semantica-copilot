@@ -1,15 +1,11 @@
-"""LangGraph 노드"""
+"""Agent Nodes - Intent-based Router Architecture"""
 
-from .aggregate_context import aggregate_context_node
-from .generate_answer import generate_answer_node
-from .intent_plan import intent_plan_node
-from .run_search import run_search_node
-from .search_plan import search_plan_node
+from semantica_copilot.agent.nodes.answer_generator import answer_generator_node
+from semantica_copilot.agent.nodes.intent_router import intent_router_node
+from semantica_copilot.agent.nodes.plan_executor import plan_executor_node
 
 __all__ = [
-    "intent_plan_node",
-    "search_plan_node",
-    "run_search_node",
-    "aggregate_context_node",
-    "generate_answer_node",
+    "intent_router_node",
+    "plan_executor_node",
+    "answer_generator_node",
 ]

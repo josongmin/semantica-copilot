@@ -17,21 +17,21 @@ from typing import List, Set
 class RetrievedContext(BaseModel):
     results: List[SearchResult] = Field(default_factory=list)
     dedupe_keys: List[str] = Field(default_factory=list)
-    
+
     # Pydantic private attr (직렬화 안됨)
     _dedupe_set: Set[str] = PrivateAttr(default_factory=set)
-    
+
     def add_result(self, result: SearchResult) -> bool:
         """O(1) 중복 체크"""
         key = f"{result.repo_id}:{result.file_path}:{result.line_start}"
         if key in self._dedupe_set:
             return False
-        
+
         self._dedupe_set.add(key)
         self.dedupe_keys.append(key)  # JSON 직렬화용
         self.results.append(result)
         return True
-    
+
     def model_post_init(self, __context):
         """역직렬화 시 _dedupe_set 복원"""
         self._dedupe_set = set(self.dedupe_keys)
@@ -49,20 +49,20 @@ from functools import cached_property
 class RetrievedContext(BaseModel):
     results: List[SearchResult] = Field(default_factory=list)
     dedupe_keys: List[str] = Field(default_factory=list)
-    
+
     @cached_property
     def _dedupe_set(self) -> Set[str]:
         return set(self.dedupe_keys)
-    
+
     def add_result(self, result: SearchResult) -> bool:
         key = f"{result.repo_id}:{result.file_path}:{result.line_start}"
         if key in self._dedupe_set:
             return False
-        
+
         # 캐시 무효화 필요
         if hasattr(self, '_dedupe_set'):
             delattr(self, '_dedupe_set')
-        
+
         self.dedupe_keys.append(key)
         self.results.append(result)
         return True
@@ -88,29 +88,29 @@ def check_enough_context_heuristic(state: AgentState) -> bool:
     # 1. 최대 스텝 도달
     if state.search_steps >= state.max_search_steps:
         return True
-    
+
     # 2. 에러 발생
     if state.error:
         return True
-    
+
     # 3. 결과 없음
     if not state.accumulated_context.results:
         return False
-    
+
     # 4. 최상위 점수 체크 (정렬된 결과)
     top_results = state.accumulated_context.get_top_k(5)
     if top_results and top_results[0].score > 0.9:
         return True
-    
+
     # 5. 충분한 컨텍스트 양
     if len(state.accumulated_context.results) >= 50:
         return True
-    
+
     # 6. 평균 점수가 높음
     avg_score = sum(r.score for r in top_results[:10]) / min(10, len(top_results))
     if avg_score > 0.75 and len(state.accumulated_context.results) >= 20:
         return True
-    
+
     return False
 ```
 
@@ -120,7 +120,7 @@ def check_enough_context_heuristic(state: AgentState) -> bool:
 ```python
 class CodeGraphClient:
     """semantica-codegraph 통합 클라이언트"""
-    
+
     async def search_with_intent(
         self,
         intent: CodeSearchIntent,
@@ -128,8 +128,8 @@ class CodeGraphClient:
     ) -> List[SearchResult]:
         """
         Intent 기반 검색 (노드에서 직접 사용)
-        
-        Intent의 entities, keywords, strategy 등을 
+
+        Intent의 entities, keywords, strategy 등을
         실제 검색 파라미터로 변환
         """
         # Query 구성
@@ -138,16 +138,16 @@ class CodeGraphClient:
             query_parts.extend(intent.entities)
         if intent.keywords:
             query_parts.extend(intent.keywords)
-        
+
         query = " ".join(query_parts) if query_parts else ""
-        
+
         # 전략별 파라미터 매핑
         search_params = {
             "query": query,
             "repo_ids": repo_ids,
             "limit": intent.limit,
         }
-        
+
         # Strategy 적용
         if intent.strategy == "graph":
             # 그래프 검색 강조
@@ -165,15 +165,15 @@ class CodeGraphClient:
                 "fuzzy": 0.0
             }
         # hybrid는 기본값 사용
-        
+
         # Graph 옵션
         if intent.graph_depth > 1:
             search_params["graph_depth"] = intent.graph_depth
         if intent.edge_types:
             search_params["edge_types"] = intent.edge_types
-        
+
         return await self.search_code(**search_params)
-    
+
     async def search_code(
         self,
         query: str,
@@ -199,32 +199,32 @@ async def run_search_node(state: AgentState) -> AgentState:
     if not state.search_intents:
         state.error = "No search intent"
         return state
-    
+
     intent = state.search_intents[-1]
-    
+
     try:
         # Intent를 직접 전달
         results = await client.search_with_intent(
             intent=intent,
             repo_ids=state.repo_ids
         )
-        
+
         # 결과 누적 (중복 제거)
         added_count = 0
         for result in results:
             if state.accumulated_context.add_result(result):
                 added_count += 1
-        
+
         logger.info(
             f"Step {state.search_steps}: Added {added_count}/{len(results)} results"
         )
-        
+
         state.search_steps += 1
-        
+
     except Exception as e:
         logger.error(f"Search failed: {e}")
         state.error = str(e)
-    
+
     return state
 ```
 
@@ -282,7 +282,7 @@ where = ["src"]
 
 class SearchIntentBuilder:
     """LLM 응답 → CodeSearchIntent 변환"""
-    
+
     @staticmethod
     def from_llm_response(response: dict, step: int) -> CodeSearchIntent:
         """LLM JSON 응답을 Intent로 변환"""
@@ -300,16 +300,16 @@ async def search_plan_node(state: AgentState) -> AgentState:
     """검색 계획 노드"""
     prompt = build_search_plan_prompt(state)
     response = await llm.ainvoke(prompt)
-    
+
     # JSON 파싱
     intent_data = parse_json_response(response.content)
-    
+
     # Intent 생성
     intent = SearchIntentBuilder.from_llm_response(
         intent_data,
         step=state.search_steps
     )
-    
+
     state.search_intents.append(intent)
     return state
 ```
@@ -320,7 +320,7 @@ async def search_plan_node(state: AgentState) -> AgentState:
 
 def route_enough_context(state: AgentState) -> str:
     """종료 조건 판단 + 에러 복구"""
-    
+
     # 에러 발생 시
     if state.error:
         # 재시도 가능한 에러인지 체크
@@ -328,14 +328,14 @@ def route_enough_context(state: AgentState) -> str:
             state.error = None  # 에러 클리어
             return "continue"  # 재시도
         return "finish"  # 복구 불가능
-    
+
     # 정상 종료 조건
     if state.enough_context:
         return "finish"
-    
+
     if state.search_steps >= state.max_search_steps:
         return "finish"
-    
+
     return "continue"
 ```
 
@@ -354,7 +354,7 @@ def log_node_execution(func):
     async def wrapper(state: AgentState) -> AgentState:
         node_name = func.__name__.replace("_node", "")
         logger.info(f"[{node_name}] Step {state.search_steps}: Starting")
-        
+
         try:
             result = await func(state)
             logger.info(
@@ -366,7 +366,7 @@ def log_node_execution(func):
             logger.error(f"[{node_name}] Failed: {e}")
             state.error = str(e)
             return state
-    
+
     return wrapper
 
 @log_node_execution
@@ -386,13 +386,13 @@ from semantica_copilot.agent.state import SearchResult
 
 class MockCodeGraphClient(CodeGraphClient):
     """테스트용 Mock 클라이언트"""
-    
+
     def __init__(self):
         self.search_calls = []
-    
+
     async def search_with_intent(self, intent, repo_ids=None):
         self.search_calls.append(intent)
-        
+
         # 더미 결과 반환
         return [
             SearchResult(
@@ -431,9 +431,9 @@ async def test_run_search_node(mock_client):
             CodeSearchIntent(entities=["test"], limit=10)
         ]
     )
-    
+
     result = await run_search_node(state)
-    
+
     assert result.search_steps == 1
     assert len(result.accumulated_context.results) == 5
     assert result.error is None
@@ -448,7 +448,7 @@ async def test_run_search_node(mock_client):
    async def search_with_intent(self, intent: CodeSearchIntent, repo_ids):
        query = " ".join(intent.keywords or intent.entities)
        return await self.search_code(
-           query=query, limit=intent.limit, 
+           query=query, limit=intent.limit,
            strategy=intent.strategy, graph_depth=intent.graph_depth
        )
    ```
@@ -652,4 +652,3 @@ answer = llm.invoke(prompt_template.format(query=..., context=...))
 ---
 
 **지금 구현 시작할까요?**
-

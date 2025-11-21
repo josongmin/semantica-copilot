@@ -28,12 +28,12 @@ class CodeSearchIntent(BaseModel):
 class RetrievedContext(BaseModel):
     results: List[SearchResult] = Field(default_factory=list)
     dedupe_keys: List[str] = Field(default_factory=list)
-    
+
     @property
     def _dedupe_set(self) -> set:
         """MVP: 매번 생성으로 충분"""
         return set(self.dedupe_keys)
-    
+
     def add_result(self, result: SearchResult) -> bool:
         key = f"{result.repo_id}:{result.file_path}:{result.line_start}"
         if key in self._dedupe_set:
@@ -41,7 +41,7 @@ class RetrievedContext(BaseModel):
         self.dedupe_keys.append(key)
         self.results.append(result)
         return True
-    
+
     def get_top_k(self, k: int) -> List[SearchResult]:
         return sorted(self.results, key=lambda x: x.score, reverse=True)[:k]
 
@@ -56,7 +56,7 @@ class AgentState(BaseModel):
     max_search_steps: int = 3
     answer: Optional[str] = None
     error: Optional[str] = None
-    
+
     # enough_context 필드 제거됨 ✅
 ```
 
@@ -78,14 +78,14 @@ class CodeGraphClient:
     ) -> List[SearchResult]:
         """Intent → 검색 파라미터 변환"""
         query = " ".join(intent.keywords or intent.entities)
-        
+
         # Strategy → weights 매핑
         weights = None
         if intent.strategy == SearchStrategy.GRAPH:
             weights = {"lexical": 0.1, "semantic": 0.2, "graph": 0.6, "fuzzy": 0.1}
         elif intent.strategy == SearchStrategy.SEMANTIC:
             weights = {"lexical": 0.1, "semantic": 0.8, "graph": 0.1, "fuzzy": 0.0}
-        
+
         return await self.search_code(
             query=query,
             repo_ids=repo_ids,
@@ -103,30 +103,30 @@ class CodeGraphClient:
 def route_enough_context(state: AgentState) -> str:
     """
     종료 조건 판단 (단일 진실 공급원)
-    
+
     Note: state.enough_context 필드 사용하지 않음
     """
     if state.error:
         return "finish"
-    
+
     if state.search_steps >= state.max_search_steps:
         return "finish"
-    
+
     if check_enough_context_heuristic(state):
         return "finish"
-    
+
     return "continue"
 
 def check_enough_context_heuristic(state: AgentState) -> bool:
     """휴리스틱 판단"""
     if len(state.accumulated_context.results) >= 50:
         return True
-    
+
     # get_top_k 사용 (안전)
     top1 = state.accumulated_context.get_top_k(1)
     if top1 and top1[0].score > 0.9:
         return True
-    
+
     return False
 ```
 
@@ -139,23 +139,23 @@ async def run_search_node(state: AgentState) -> AgentState:
     if not state.search_intents:
         state.error = "No search intent"
         return state
-    
+
     intent = state.search_intents[-1]
-    
+
     try:
         # search_with_intent 사용
         results = await client.search_with_intent(intent, state.repo_ids)
-        
+
         # 중복 제거하며 추가
         for r in results:
             state.accumulated_context.add_result(r)
-        
+
         state.search_steps += 1
-        
+
     except Exception as e:
         logger.error(f"Search failed: {e}")
         state.error = str(e)
-    
+
     return state
 ```
 
@@ -171,10 +171,10 @@ async def simple_agent(query: str, repo_ids: List[str]) -> str:
         strategy=SearchStrategy.HYBRID,
         limit=10
     )
-    
+
     client = CodeGraphClient(backend=BackendType.HTTP)
     results = await client.search_with_intent(intent, repo_ids)
-    
+
     context = "\n".join([r.text for r in results[:5]])
     return f"결과:\n{context}"
 
@@ -265,4 +265,3 @@ graph.add_conditional_edges("aggregate", route_enough_context)
 ---
 
 **설계 완료. 구현 시작 준비 완료.**
-

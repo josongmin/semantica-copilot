@@ -76,7 +76,7 @@ async def _search_http(self, query, repo_ids, limit, ...):
             }
         )
         data = response.json()
-        
+
         # 응답 변환
         for item in data["results"]:
             result = SearchResult(
@@ -90,7 +90,7 @@ async def _search_http(self, query, repo_ids, limit, ...):
                 scores=item["features"]  # ✅ features → scores
             )
             all_results.append(result)
-    
+
     return all_results
 ```
 
@@ -144,4 +144,3 @@ results.append(
 2. 테스트 스크립트 작성
    - 실제 API 호출 확인
    - text 필드 없어도 동작하는지 확인
-

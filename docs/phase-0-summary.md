@@ -154,4 +154,3 @@ apps/server/
 **Phase 0 완료! 🎉**
 
 codegraph 연동 검증 완료, Phase 1 진행 준비 완료.
-

@@ -2,7 +2,7 @@
 
 import pytest
 
-from semantica_copilot.agent.state import CodeSearchIntent, SearchStrategy
+from semantica_copilot.tools.codegraph import CodeSearchIntent, SearchStrategy
 
 
 @pytest.mark.asyncio

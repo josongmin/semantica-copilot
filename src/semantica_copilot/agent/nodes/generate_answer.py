@@ -1,9 +1,10 @@
-"""Generate Answer 노드"""
+"""Generate Answer 노드 (TOON 최적화)"""
 
 import logging
 import os
 
 from semantica_copilot.agent.state import AgentState
+from semantica_copilot.utils.toon import encode_to_toon
 
 logger = logging.getLogger(__name__)
 
@@ -32,19 +33,67 @@ async def generate_answer_node(state: AgentState) -> AgentState:
         logger.warning("No results found")
         return state
 
-    # Phase 3: LLM 기반 답변
+    # Phase 3: LLM 기반 답변 (OpenAI + TOON 포맷)
     if USE_LLM:
         try:
-            from semantica_copilot.agent.prompts.templates import build_code_explain_prompt
-            from semantica_copilot.llm.provider import get_llm
+            from semantica_copilot.llm.provider import LLMProvider
 
-            llm = get_llm()
-            prompt = build_code_explain_prompt(state)
+            # OpenAI 전용 LLM 사용 (최종 답변 생성용)
+            openai_model = os.getenv("ANSWER_LLM_MODEL", "gpt-4o-mini")
+            llm = LLMProvider(
+                model=openai_model,
+                temperature=0.3,
+                max_tokens=2000,
+            )
+            logger.info(f"OpenAI 모델 사용: {openai_model}")
 
-            # LLM 호출
-            answer = await llm.ainvoke(prompt)
+            # 검색 결과를 TOON 포맷으로 변환
+            top_results = state.accumulated_context.get_top_k(5)
+            results_data = []
+            for result in top_results:
+                results_data.append(
+                    {
+                        "file": result.file_path,
+                        "lines": f"{result.line_start}-{result.line_end}",
+                        "score": round(result.score, 3),
+                        "code": result.text[:1000] if result.text else "",  # 길이 제한
+                    }
+                )
+
+            context_data = {
+                "query": state.query,
+                "results": results_data,
+            }
+
+            # TOON 포맷으로 변환
+            try:
+                toon_context = encode_to_toon(context_data)
+                logger.info(f"TOON 변환 성공: 결과 {len(results_data)}개")
+
+                prompt = f"""다음 코드 검색 결과를 바탕으로 질문에 답변하세요.
+
+```toon
+{toon_context}
+```
+
+답변 지침:
+1. 코드 컨텍스트에 기반한 정확한 답변
+2. 관련 파일/함수/클래스 명시
+3. 한국어로 답변"""
+            except Exception as e:
+                logger.warning(f"TOON 변환 실패: {e}")
+                # 폴백: 간단한 포맷
+                prompt = f"""질문: {state.query}
+
+검색 결과: {len(top_results)}개
+
+답변해주세요 (한국어)."""
+
+            # OpenAI LLM 호출
+            response = await llm.ainvoke(prompt)
+            answer = response.content if hasattr(response, "content") else str(response)
             state.answer = answer
-            logger.info(f"LLM answer generated: {len(answer)} chars")
+            logger.info(f"OpenAI 답변 생성 완료: {len(answer)} chars")
             return state
 
         except Exception as e:
@@ -62,13 +111,13 @@ async def generate_answer_node(state: AgentState) -> AgentState:
     for i, result in enumerate(top_results, 1):
         answer_parts.append(f"\n## {i}. {result.file_path}:{result.line_start}")
         answer_parts.append(f"**Score**: {result.score:.3f}")
-        
+
         # scores 값이 None일 수 있으므로 처리
-        lexical = result.scores.get('lexical') or 0
-        semantic = result.scores.get('semantic') or 0
-        graph = result.scores.get('graph') or 0
-        fuzzy = result.scores.get('fuzzy') or 0
-        
+        lexical = result.scores.get("lexical") or 0
+        semantic = result.scores.get("semantic") or 0
+        graph = result.scores.get("graph") or 0
+        fuzzy = result.scores.get("fuzzy") or 0
+
         answer_parts.append(
             f"**Scores**: Lexical={lexical:.2f}, "
             f"Semantic={semantic:.2f}, "

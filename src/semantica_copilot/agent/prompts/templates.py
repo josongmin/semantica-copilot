@@ -66,7 +66,7 @@ def build_search_plan_prompt(state: AgentState) -> str:
     template = load_template("search_plan")
 
     # 상위 파일 목록
-    unique_files = list(set(r.file_path for r in state.accumulated_context.results))
+    unique_files = list({r.file_path for r in state.accumulated_context.results})
     top_files = "\n".join(f"- {f}" for f in unique_files[:10])
 
     prompt = template.format(

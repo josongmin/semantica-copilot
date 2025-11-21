@@ -5,7 +5,8 @@ import os
 import pytest
 
 from semantica_copilot.agent.prompts.templates import build_code_explain_prompt
-from semantica_copilot.agent.state import AgentState, SearchResult
+from semantica_copilot.agent.state import AgentState
+from semantica_copilot.tools.codegraph import SearchResult
 
 
 def test_build_code_explain_prompt():

@@ -3,8 +3,7 @@
 import httpx
 import pytest
 
-from semantica_copilot.agent.state import SearchResult
-from semantica_copilot.tools.codegraph import BackendType, CodeGraphClient
+from semantica_copilot.tools.codegraph import BackendType, CodeGraphClient, SearchResult
 
 
 class MockCodeGraphClient(CodeGraphClient):

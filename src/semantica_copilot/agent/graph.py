@@ -5,13 +5,10 @@ import logging
 from langgraph.graph import END, StateGraph
 
 from semantica_copilot.agent.nodes import (
-    aggregate_context_node,
-    generate_answer_node,
-    intent_plan_node,
-    run_search_node,
-    search_plan_node,
+    answer_generator_node,
+    intent_router_node,
+    plan_executor_node,
 )
-from semantica_copilot.agent.routing import route_enough_context
 from semantica_copilot.agent.state import AgentState
 
 logger = logging.getLogger(__name__)
@@ -19,52 +16,32 @@ logger = logging.getLogger(__name__)
 
 def build_agent_graph():
     """
-    Phase 2: Search Loop 에이전트 그래프
+    Intent-based Router Architecture
 
     플로우:
-    intent_plan → search_plan ←───┐
-                     ↓             │
-                 run_search        │
-                     ↓             │
-                 aggregate         │
-                     ↓             │
-              check_enough ────────┘
-                     ↓
-                 generate → END
+    intent_router → plan_executor → answer_generator → END
 
-    - 조건부 루프 (max_search_steps까지)
-    - routing 함수로 종료 판단
+    - 순차적 실행 (loop 없음)
+    - intent_router: 질의 분석 → ExecutionPlan 생성
+    - plan_executor: ExecutionPlan 순차 실행 → 결과 누적
+    - answer_generator: 결과 기반 답변 생성
     """
-    logger.info("Building agent graph (Phase 2)...")
+    logger.info("Building agent graph (Intent-based Router)...")
 
     graph = StateGraph(AgentState)
 
-    # 노드 추가 (async 노드는 자동 처리)
-    graph.add_node("intent_plan", intent_plan_node)  # async (LLM 사용 시)
-    graph.add_node("search_plan", search_plan_node)
-    graph.add_node("run_search", run_search_node)  # async
-    graph.add_node("aggregate", aggregate_context_node)
-    graph.add_node("generate", generate_answer_node)  # async (LLM 사용 시)
+    # 노드 추가 (모두 async)
+    graph.add_node("intent_router", intent_router_node)
+    graph.add_node("plan_executor", plan_executor_node)
+    graph.add_node("answer_generator", answer_generator_node)
 
-    # 순차 플로우
-    graph.set_entry_point("intent_plan")
-    graph.add_edge("intent_plan", "search_plan")
-    graph.add_edge("search_plan", "run_search")
-    graph.add_edge("run_search", "aggregate")
+    # 순차 플로우 (loop 없음)
+    graph.set_entry_point("intent_router")
+    graph.add_edge("intent_router", "plan_executor")
+    graph.add_edge("plan_executor", "answer_generator")
+    graph.add_edge("answer_generator", END)
 
-    # 조건부 루프 (aggregate 후 판단)
-    graph.add_conditional_edges(
-        "aggregate",
-        route_enough_context,
-        {
-            "continue": "search_plan",  # 더 검색
-            "finish": "generate",  # 답변 생성
-        },
-    )
-
-    graph.add_edge("generate", END)
-
-    logger.info("Graph built successfully (with loop)")
+    logger.info("Graph built successfully (sequential pipeline)")
 
     return graph.compile()
 

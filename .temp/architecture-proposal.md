@@ -63,8 +63,8 @@ class SearchResult(BaseModel):
 class RetrievedContext(BaseModel):
     """
     검색 결과 누적 컨테이너
-    
-    Note: 
+
+    Note:
     - dedupe_keys는 list로 관리 (LangGraph 체크포인트 직렬화 안전)
     - 내부적으로 set()으로 캐스팅하여 중복 체크
     - MVP: 매번 set() 생성해도 성능 이슈 없음
@@ -72,16 +72,16 @@ class RetrievedContext(BaseModel):
     """
     results: List[SearchResult] = Field(default_factory=list)
     dedupe_keys: List[str] = Field(default_factory=list)
-    
+
     @property
     def _dedupe_set(self) -> set:
         """중복 체크용 set (매번 생성, 추후 최적화 가능)"""
         return set(self.dedupe_keys)
-    
+
     def add_result(self, result: SearchResult) -> bool:
         """
         결과 추가 (중복 제거)
-        
+
         Returns:
             True if added, False if duplicate
         """
@@ -91,7 +91,7 @@ class RetrievedContext(BaseModel):
         self.dedupe_keys.append(key)
         self.results.append(result)
         return True
-    
+
     def get_top_k(self, k: int) -> List[SearchResult]:
         """상위 k개 결과 (점수순 정렬)"""
         return sorted(self.results, key=lambda x: x.score, reverse=True)[:k]
@@ -115,7 +115,7 @@ class CodeSearchIntent(BaseModel):
 class AgentState(BaseModel):
     """
     LangGraph State (JSON 직렬화 안전)
-    
+
     Note:
     - enough_context 필드 제거: routing에서 직접 판단
     - 상태 변경은 노드, 판단은 routing이 책임
@@ -123,24 +123,24 @@ class AgentState(BaseModel):
     # 입력
     query: str
     repo_ids: Optional[List[str]] = None
-    
+
     # 계획
     plan: Optional[Dict] = None
-    
+
     # 검색
     search_intents: List[CodeSearchIntent] = Field(default_factory=list)
     accumulated_context: RetrievedContext = Field(default_factory=RetrievedContext)
-    
+
     # 제어
     search_steps: int = 0
     max_search_steps: int = 3
-    
+
     # 출력
     answer: Optional[str] = None
-    
+
     # 에러 핸들링
     error: Optional[str] = None
-    
+
     class Config:
         arbitrary_types_allowed = True
 ```
@@ -195,7 +195,7 @@ intent = CodeSearchIntent(
 #### AggregateContextNode (Logic)
 - **입력**: accumulated_context, new_results
 - **출력**: accumulated_context (업데이트)
-- **역할**: 
+- **역할**:
   - 중복 제거 (file_path:line_start)
   - 점수순 정렬
   - 상위 k개 유지
@@ -210,23 +210,23 @@ intent = CodeSearchIntent(
 def check_enough_context_heuristic(state: AgentState) -> bool:
     """
     휴리스틱 기반 종료 조건
-    
+
     Note: state.enough_context를 세팅하지 않고,
     routing 함수에서만 이 결과 사용
     """
     # 1. 최대 스텝 도달
     if state.search_steps >= state.max_search_steps:
         return True
-    
+
     # 2. 충분한 결과 수
     if len(state.accumulated_context.results) >= 50:
         return True
-    
+
     # 3. 최상위 결과 점수 (안전하게 get_top_k 사용)
     top_results = state.accumulated_context.get_top_k(1)
     if top_results and top_results[0].score > 0.9:
         return True
-    
+
     return False
 
 # LLM 버전 (Phase 3: 더 정교함)
@@ -265,10 +265,10 @@ class BackendType(Enum):
 class CodeGraphClient:
     """
     semantica-codegraph 통합 클라이언트
-    
+
     연동 방식을 추상화하여 에이전트 코드와 분리
     """
-    
+
     def __init__(
         self,
         backend: BackendType = BackendType.HTTP,
@@ -277,7 +277,7 @@ class CodeGraphClient:
         self.backend = backend
         self.base_url = base_url
         self._init_backend()
-    
+
     def _init_backend(self):
         """백엔드 초기화"""
         if self.backend == BackendType.HTTP:
@@ -289,7 +289,7 @@ class CodeGraphClient:
         elif self.backend == BackendType.DIRECT:
             from src.core.bootstrap import Bootstrap
             self.bootstrap = Bootstrap.from_env()
-    
+
     async def search_code(
         self,
         query: str,
@@ -299,7 +299,7 @@ class CodeGraphClient:
     ) -> List[SearchResult]:
         """
         하이브리드 검색
-        
+
         Returns:
             도메인 모델 (SearchResult 리스트)
         """
@@ -309,11 +309,11 @@ class CodeGraphClient:
             return await self._search_mcp(query, repo_ids, limit, **kwargs)
         elif self.backend == BackendType.DIRECT:
             return await self._search_direct(query, repo_ids, limit, **kwargs)
-    
+
     async def _search_http(self, query: str, repo_ids, limit, strategy, weights, graph_depth, edge_types, **kwargs):
         """
         HTTP API 호출
-        
+
         Note: 모든 파라미터는 이미 JSON 직렬화 가능한 타입
         (Enum → str 변환 완료)
         """
@@ -332,7 +332,7 @@ class CodeGraphClient:
         )
         data = response.json()
         return [SearchResult(**item) for item in data["results"]]
-    
+
     async def _search_mcp(self, query: str, repo_ids, limit, **kwargs):
         """MCP tool 호출"""
         result = await self.client.call_tool(
@@ -345,7 +345,7 @@ class CodeGraphClient:
             }
         )
         return [SearchResult(**item) for item in result]
-    
+
     async def _search_direct(self, query: str, repo_ids, limit, **kwargs):
         """직접 라이브러리 호출"""
         candidates = self.bootstrap.hybrid_retriever.retrieve(
@@ -371,7 +371,7 @@ class CodeGraphClient:
             )
             for c in candidates
         ]
-    
+
     async def find_definition(
         self,
         symbol_name: str,
@@ -381,7 +381,7 @@ class CodeGraphClient:
         """심볼 정의 찾기"""
         # 동일한 패턴으로 백엔드별 구현
         ...
-    
+
     async def explore_graph(
         self,
         repo_id: str,
@@ -392,7 +392,7 @@ class CodeGraphClient:
     ) -> Dict:
         """그래프 탐색"""
         ...
-    
+
     async def get_context(
         self,
         repo_id: str,
@@ -418,18 +418,18 @@ client = CodeGraphClient(backend=BackendType.HTTP)
 async def run_search_node(state: AgentState) -> AgentState:
     """검색 실행 노드"""
     intent = state.search_intents[-1]
-    
+
     # 추상화된 인터페이스만 사용
     results = await client.search_code(
         query=intent.entities[0] if intent.entities else "",
         repo_ids=state.repo_ids,
         limit=intent.limit
     )
-    
+
     # 도메인 모델로 업데이트
     state.accumulated_context.results.extend(results)
     state.search_steps += 1
-    
+
     return state
 ```
 
@@ -458,7 +458,7 @@ from .routing import route_enough_context
 def build_agent_graph():
     """에이전트 그래프 구성"""
     graph = StateGraph(AgentState)
-    
+
     # 노드 추가
     graph.add_node("intent_plan", intent_plan_node)
     graph.add_node("search_plan", search_plan_node)
@@ -466,14 +466,14 @@ def build_agent_graph():
     graph.add_node("aggregate", aggregate_context_node)
     graph.add_node("check_enough", enough_context_node)
     graph.add_node("generate", generate_answer_node)
-    
+
     # 엣지 설정 (순차)
     graph.set_entry_point("intent_plan")
     graph.add_edge("intent_plan", "search_plan")
     graph.add_edge("search_plan", "run_search")
     graph.add_edge("run_search", "aggregate")
     graph.add_edge("aggregate", "check_enough")  # ⚠️ 중요: 누락하지 말 것
-    
+
     # 조건부 엣지 (루프 or 종료)
     graph.add_conditional_edges(
         "check_enough",
@@ -483,9 +483,9 @@ def build_agent_graph():
             "finish": "generate"        # 답변 생성
         }
     )
-    
+
     graph.add_edge("generate", END)
-    
+
     return graph.compile()
 
 
@@ -493,22 +493,22 @@ def build_agent_graph():
 def route_enough_context(state: AgentState) -> str:
     """
     종료 조건 라우팅
-    
+
     Note: state.enough_context는 사용하지 않음
     heuristic 함수로 직접 판단
     """
     # 1. 에러 발생 시 종료
     if state.error:
         return "finish"
-    
+
     # 2. 최대 스텝 도달
     if state.search_steps >= state.max_search_steps:
         return "finish"
-    
+
     # 3. 휴리스틱 체크
     if check_enough_context_heuristic(state):
         return "finish"
-    
+
     return "continue"
 
 
@@ -586,12 +586,12 @@ JSON으로 응답:
 def search_plan_node(state: AgentState) -> AgentState:
     """
     단계별 고정 패턴
-    
+
     Step 0: 심볼/파일 찾기 (hybrid)
     Step 1: 호출 관계 확장 (graph)
     """
     step = state.search_steps
-    
+
     if step == 0:
         # 초기 검색: 심볼 찾기
         intent = CodeSearchIntent(
@@ -610,7 +610,7 @@ def search_plan_node(state: AgentState) -> AgentState:
             edge_types=["calls", "uses"],
             limit=10
         )
-    
+
     state.search_intents.append(intent)
     return state
 ```
@@ -672,10 +672,10 @@ intent = CodeSearchIntent(
 ```python
 class ConversationMemory:
     """대화 이력 관리"""
-    
+
     def add_turn(self, query: str, answer: str, context: RetrievedContext):
         """턴 저장"""
-        
+
     def get_relevant_history(self, query: str, k: int = 3) -> List[dict]:
         """관련 이전 대화 검색"""
 ```

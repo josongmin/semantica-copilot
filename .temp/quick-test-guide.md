@@ -148,4 +148,3 @@ python -m apps.api.main
 cd /Users/songmin/Documents/code-jo/semantica/semantica-copilot
 python test_simple.py
 ```
-

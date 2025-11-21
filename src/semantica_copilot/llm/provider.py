@@ -42,29 +42,27 @@ class LLMProvider:
 
         logger.info(f"LLMProvider initialized: model={model}, temp={temperature}")
 
-    async def ainvoke(
-        self,
-        prompt: str,
-        system: Optional[str] = None,
-        **kwargs,
-    ) -> str:
+    async def ainvoke(self, messages_or_prompt, system: Optional[str] = None, **kwargs):
         """
         비동기 LLM 호출
 
         Args:
-            prompt: 사용자 프롬프트
-            system: 시스템 프롬프트 (선택)
+            messages_or_prompt: messages 리스트 또는 prompt 문자열
+            system: 시스템 프롬프트 (선택, prompt 모드일 때만)
             **kwargs: 추가 파라미터 (temperature, max_tokens 등)
 
         Returns:
-            LLM 응답 텍스트
+            응답 객체 (content 속성 포함) 또는 문자열
         """
-        messages = []
-
-        if system:
-            messages.append({"role": "system", "content": system})
-
-        messages.append({"role": "user", "content": prompt})
+        # messages 리스트로 직접 호출
+        if isinstance(messages_or_prompt, list):
+            messages = messages_or_prompt
+        # prompt + system 모드
+        else:
+            messages = []
+            if system:
+                messages.append({"role": "system", "content": system})
+            messages.append({"role": "user", "content": messages_or_prompt})
 
         # 파라미터 병합
         params = {
@@ -77,9 +75,8 @@ class LLMProvider:
 
         try:
             response = await acompletion(**params)
-            content = response.choices[0].message.content
-            logger.info(f"LLM response: {len(content)} chars")
-            return content
+            logger.info(f"LLM response: {len(response.choices[0].message.content)} chars")
+            return response.choices[0].message
 
         except Exception as e:
             logger.error(f"LLM error: {e}")
@@ -119,7 +116,7 @@ class LLMProvider:
         try:
             response = completion(**params)
             content = response.choices[0].message.content
-            return content
+            return content  # type: ignore[no-any-return]
 
         except Exception as e:
             logger.error(f"LLM error: {e}")

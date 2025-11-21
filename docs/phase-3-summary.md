@@ -125,7 +125,7 @@ HybridRetriever 클래스는 다음과 같은 방식으로 동작합니다:
    - 각 검색 결과의 점수를 통합
    - 가중치 기반 최종 순위 결정
 
-3. **성능 최적화**: 
+3. **성능 최적화**:
    - fetch_multiplier로 over-fetching
    - 중복 제거 및 상위 k개 반환
 
@@ -192,7 +192,7 @@ async def search_plan_node_llm(state):
 class ConversationMemory:
     def add_turn(self, query, answer, context):
         """대화 이력 저장"""
-        
+
     def get_relevant_history(self, query):
         """관련 이전 대화"""
 ```
@@ -273,4 +273,3 @@ python -m pytest tests/agent/test_llm.py::test_llm_generation -v
 **Phase 3 LLM 통합 완료! 🎉**
 
 기본 LLM 통합 완료, OPENAI_API_KEY만 설정하면 바로 사용 가능.
-

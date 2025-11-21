@@ -94,4 +94,3 @@ python -m apps.api.main
 # main.py 확인
 grep -A 3 "include_router" apps/api/main.py
 ```
-

@@ -51,13 +51,13 @@ class SearchResult(BaseModel):
 async def search_code(request: SearchRequest):
     # 검색 실행
     candidates = retriever.retrieve(...)
-    
+
     # 결과 변환 (text 포함)
     results = []
     for c in candidates:
         # ✅ chunk_store에서 text 가져오기
         chunk = bootstrap.chunk_store.get_chunk(request.repo_id, c.chunk_id)
-        
+
         results.append(
             SearchResult(
                 chunk_id=c.chunk_id,
@@ -68,7 +68,7 @@ async def search_code(request: SearchRequest):
                 text=chunk.text if chunk else ""  # ✅ 추가
             )
         )
-    
+
     return SearchResponse(...)
 ```
 
@@ -160,4 +160,3 @@ curl -X POST http://localhost:8000/api/search/ \
 3. text 필드 동작 확인
 4. copilot E2E 테스트
 5. Phase 3 진행
-

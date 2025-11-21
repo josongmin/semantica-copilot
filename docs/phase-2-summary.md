@@ -253,4 +253,3 @@ curl -X POST http://localhost:8001/chat \
 **Phase 2 완료! 🎉**
 
 Search Loop 구현 완료, Phase 3 (고도화) 진행 준비 완료.
-

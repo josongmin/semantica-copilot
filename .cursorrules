@@ -7,12 +7,17 @@
 - 포트/어댑터 패턴 준수
 - 모듈 간 순환 의존성 방지
 
+## 린터 설정
+- Cursor에서 Ruff extension 설치 필수: `charliermarsh.ruff`
+- 설정 파일: `ruff.toml`, `pyrightconfig.json`, `pyproject.toml`
+- pre-commit과 동일한 룰 적용: import sorting (I), pyflakes (F), pycodestyle (E, W)
+- 저장 시 자동 포맷팅 및 import 정리
+
 ## 파일 생성 규칙
 - 필요한 경우에만 파일생성. 대부분은 에이전트 답변으로 해결.
 - 마크다운 파일은 `.temp` 폴더에 생성
 - 간결하고 필수적인 내용만 포함
-- 이모지 사용 금지
+- 이모지 사용 절대 금지 (문서, 코드, 로그 메시지 모두)
 
 ## 응답 언어
 - 항상 한국어로 응답
-

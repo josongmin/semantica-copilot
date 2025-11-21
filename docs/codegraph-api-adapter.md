@@ -146,4 +146,3 @@ async def get_chunk_content(self, chunk_id: str) -> str:
 - `POST /hybrid/symbols`: 심볼 검색
 - `GET /hybrid/explain/{candidate_id}`: 후보 설명
 - `POST /hybrid/session/preferences`: 세션 설정
-

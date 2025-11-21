@@ -4,8 +4,13 @@ import httpx
 import pytest
 
 from semantica_copilot.agent.graph import build_agent_graph
-from semantica_copilot.agent.state import AgentState, CodeSearchIntent, SearchStrategy
-from semantica_copilot.tools.codegraph import BackendType, CodeGraphClient
+from semantica_copilot.agent.state import AgentState
+from semantica_copilot.tools.codegraph import (
+    BackendType,
+    CodeGraphClient,
+    CodeSearchIntent,
+    SearchStrategy,
+)
 
 
 @pytest.mark.asyncio
@@ -158,9 +163,8 @@ async def test_agent_full_flow_real(codegraph_available, monkeypatch):
     final_state = await graph.ainvoke(initial_state)
 
     # 검증
-    assert final_state["plan"] is not None
-    assert final_state["search_steps"] >= 1
-    assert final_state["search_steps"] <= 2
+    assert final_state["execution_plan"] is not None
+    assert len(final_state["execution_results"]) >= 1
     assert final_state["answer"] is not None
 
 
@@ -199,7 +203,7 @@ async def test_multiple_repos_real(codegraph_available):
         assert isinstance(results, list)
         # 결과가 있다면 여러 repo에서 온 것
         if results:
-            unique_repos = set(r.repo_id for r in results)
+            unique_repos = {r.repo_id for r in results}
             # 최소 1개 repo에서 결과 (2개일 수도)
             assert len(unique_repos) >= 1
 

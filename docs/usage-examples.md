@@ -191,4 +191,3 @@ Phase 3에서는:
 - LLM 기반 generate_answer (정교한 설명)
 - Memory 통합 (대화 이력)
 - Streaming 응답 (SSE)
-
