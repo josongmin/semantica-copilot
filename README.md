@@ -1,6 +1,31 @@
+<p align="center"><img src="readme-banner.svg" alt="Semantica Copilot — Intent planning and code understanding over a retrieval API." width="100%"></p>
+
 # Semantica Copilot
 
 A Python code-understanding agent built with LangGraph and the Semantica Codegraph HTTP API. It turns a question into an execution plan, retrieves code context, and produces an answer from the collected results.
+
+
+## Engineering highlights
+
+| Mechanism | Engineering purpose |
+| :--- | :--- |
+| **Typed agent state** | A Pydantic state model carries the question, plan, retrieved context, and generated answer between graph nodes. |
+| **Intent-to-execution pipeline** | The graph separates intent routing, plan execution, and answer generation. |
+| **Retrieval as a service boundary** | The Codegraph HTTP client owns backend integration; retrieval capabilities belong to the configured backend. |
+| **Separate entry paths** | The graph-backed server and simpler single-search CLI are distinct integrations, with different execution scope. |
+
+
+## Architecture at a glance
+
+```mermaid
+flowchart LR
+    Q["Question"] --> I["Intent router"]
+    I --> P["Plan executor"]
+    P --> C["Codegraph HTTP client"]
+    C --> B["Semantica Codegraph API"]
+    B --> A["Answer generator"]
+    A --> E["Graph completion"]
+```
 
 ## Execution model
 
