@@ -1,77 +1,62 @@
 # Semantica Copilot
 
-LangGraph 기반 코드 이해 에이전트
+A Python code understanding agent built with LangGraph and the Semantica
+Codegraph HTTP API. It turns a question into an execution plan, retrieves code
+context, and generates an answer from the collected results.
 
-## 개요
+## Architecture and status
 
-semantica-codegraph의 고도화된 하이브리드 검색을 활용하여,
-동적 검색 전략과 반복적 컨텍스트 수집으로 정확한 코드 이해를 제공합니다.
+The current [agent graph](src/semantica_copilot/agent/graph.py) is a sequential
+pipeline:
 
-## 특징
-
-- **동적 검색 전략**: LLM이 단계별 검색 계획 수립
-- **반복 검색**: 다단계 검색으로 컨텍스트 누적
-- **하이브리드 검색**: Lexical + Semantic + Graph + Fuzzy + Fusion
-- **그래프 활용**: 코드 관계 기반 확장
-
-## 아키텍처
-
-- **State**: Pydantic 기반 타입 안전 State
-- **Tools**: semantica-codegraph 통합 클라이언트
-- **Agent**: LangGraph 기반 multi-step retrieval
-
-## 설치
-
-```bash
-cd semantica-copilot
-pip install -e .
+```text
+intent_router -> plan_executor -> answer_generator -> END
 ```
 
-## 사용법
+It uses a Pydantic state model and a
+[Codegraph client](src/semantica_copilot/tools/codegraph.py). Search capabilities
+come from the configured Codegraph backend. The graph has no iterative retrieval
+loop; the command-line entry point described below is a simpler single-search
+integration path.
 
-### CLI (Phase 0)
+This is an earlier code understanding implementation. Repository tests and
+historical phase documents do not establish current production qualification.
 
-```bash
-python -m semantica_copilot.cli query "UserService는 뭐하는 클래스?"
+## Local development
+
+Requires Python 3.10 or later, a running
+[Semantica Codegraph](https://github.com/josongmin/semantica-codegraph) HTTP API,
+and an indexed repository in that backend.
+
+```sh
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -e ".[dev]"
+
+# Single-search CLI: query followed by comma-separated repository IDs.
+# The CLI uses http://localhost:8000 for the Codegraph API.
+semantica-copilot "HybridRetriever" semantica-codegraph
 ```
 
-### FastAPI (Phase 1)
+The module entry point is equivalent:
 
-```bash
-uvicorn semantica_copilot.apps.server.main:app --reload
+```sh
+python -m semantica_copilot.cli.main "HybridRetriever" semantica-codegraph
 ```
 
-## 개발
+The LangGraph pipeline and FastAPI application live separately in
+[src/semantica_copilot/agent](src/semantica_copilot/agent) and
+[src/semantica_copilot/apps/server](src/semantica_copilot/apps/server).
+LLM-backed execution also requires provider configuration; see
+[src/semantica_copilot/llm/provider.py](src/semantica_copilot/llm/provider.py).
 
-```bash
-# 의존성 설치
-pip install -e ".[dev]"
+## Tests and design notes
 
-# 테스트
-pytest
+- [tests](tests): agent, client, error handling, and integration tests.
+- [docs/adr](docs/adr): intent routing, planning, tool selection, execution, and backend contracts.
+- [docs/codegraph-api-adapter.md](docs/codegraph-api-adapter.md): Codegraph API adapter.
+- [docs/integration-testing.md](docs/integration-testing.md): integration setup and checks.
 
-# 포맷팅
-black src/ tests/
-ruff src/ tests/
-```
-
-## 프로젝트 구조
-
-```
-src/semantica_copilot/
-├── agent/           # LangGraph 에이전트
-│   ├── state.py    # State 정의
-│   ├── graph.py    # 그래프 구성
-│   └── nodes/      # 노드 구현
-├── tools/          # 외부 도구
-│   └── codegraph.py
-├── prompts/        # 프롬프트 템플릿
-└── apps/           # 애플리케이션
-    └── server/     # FastAPI 서버
-```
-
-## 문서
-
-- `docs/architecture-proposal.md`: 전체 아키텍처
-- `docs/final-decisions.md`: 최종 설계 결정
-- `docs/common-pitfalls.md`: 흔한 실수 방지
+Run tests with `python -m pytest` in a configured development environment.
+External API and provider tests require their respective services. No test or
+benchmark results are claimed by this documentation update.
