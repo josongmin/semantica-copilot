@@ -2,18 +2,18 @@
 
 # Semantica Copilot
 
-A Python code-understanding agent built with LangGraph and the Semantica Codegraph HTTP API. It turns a question into an execution plan, retrieves code context, and produces an answer from the collected results.
+<p align="center"><a href="#engineering-highlights">Engineering</a> · <a href="#architecture-at-a-glance">Architecture</a> · <a href="#quick-start">Get started</a> · <a href="#documentation">Reference</a></p>
 
+A Python code-understanding agent built with LangGraph and the Semantica Codegraph HTTP API. It turns a question into an execution plan, retrieves code context, and produces an answer from the collected results.
 
 ## Engineering highlights
 
-| Mechanism | Engineering purpose |
-| :--- | :--- |
-| **Typed agent state** | A Pydantic state model carries the question, plan, retrieved context, and generated answer between graph nodes. |
-| **Intent-to-execution pipeline** | The graph separates intent routing, plan execution, and answer generation. |
-| **Retrieval as a service boundary** | The Codegraph HTTP client owns backend integration; retrieval capabilities belong to the configured backend. |
-| **Separate entry paths** | The graph-backed server and simpler single-search CLI are distinct integrations, with different execution scope. |
-
+| Mechanism | Engineering purpose | Source |
+| :--- | :--- | :--- |
+| **Typed agent state** | A Pydantic state model carries the question, plan, retrieved context, and generated answer between graph nodes. | [Agent state](src/semantica_copilot/agent/state.py) |
+| **Intent-to-execution pipeline** | The graph separates intent routing, plan execution, and answer generation. | [Graph](src/semantica_copilot/agent/graph.py) |
+| **Retrieval as a service boundary** | The Codegraph HTTP client owns backend integration; retrieval capabilities belong to the configured backend. | [Backend client](src/semantica_copilot/tools/codegraph.py) |
+| **Separate entry paths** | The graph-backed server and simpler single-search CLI are distinct integrations, with different execution scope. | [CLI](src/semantica_copilot/cli/main.py) |
 
 ## Architecture at a glance
 
@@ -75,3 +75,5 @@ External API and model tests require their respective services. Historical phase
 - [Architecture decisions](docs/adr)
 - [Codegraph API adapter](docs/codegraph-api-adapter.md)
 - [Integration testing](docs/integration-testing.md)
+
+<p align="center"><sub><a href="https://github.com/josongmin">Project map</a> · <a href="#engineering-highlights">Back to overview</a></sub></p>
